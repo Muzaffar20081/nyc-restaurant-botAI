@@ -1,74 +1,83 @@
 import os
 import logging
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
 # Настройка логирования
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Получаем токен из переменных окружения Railway
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-if not BOT_TOKEN:
-    logger.error("❌ ОШИБКА: BOT_TOKEN не найден в Variables!")
-    exit(1)
+# Получаем токен
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8422033699:AAEoLcJq-LrKD6Su9Vtg4sNDf0v7IL5XRus")
 
 print("=" * 50)
 print("🚀 БОТ ЗАПУСКАЕТСЯ...")
 print(f"🤖 Токен: {BOT_TOKEN[:15]}...")
 print("=" * 50)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def start(update: Update, context: CallbackContext):
     """Обработчик /start"""
-    user = update.effective_user
-    await update.message.reply_text(
+    user = update.message.from_user
+    update.message.reply_text(
         f"✅ Привет, {user.first_name}!\n\n"
-        f"Бот работает! Твой ID: {user.id}\n\n"
+        f"Твой ID: {user.id}\n"
+        "Бот работает на Railway 24/7!\n\n"
         "Команды:\n"
         "/start - это сообщение\n"
-        "/help - помощь\n"
-        "/test - тест"
+        "/menu - меню\n"
+        "/help - помощь"
     )
-    logger.info(f"Пользователь {user.id} использовал /start")
+    logger.info(f"User {user.id} started bot")
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+def help_command(update: Update, context: CallbackContext):
     """Обработчик /help"""
-    await update.message.reply_text(
-        "🤖 Помощь:\n\n"
-        "Это тестовый бот.\n"
-        "Если видишь это сообщение - бот работает!\n\n"
-        "Развернут на Railway 24/7"
+    update.message.reply_text("🤖 Бот для заказа еды. Используй /menu")
+
+def menu_command(update: Update, context: CallbackContext):
+    """Обработчик /menu"""
+    menu_text = (
+        "🍽️ *Меню:*\n\n"
+        "🍔 *Бургеры:*\n"
+        "• Классический бургер - 350₽\n\n"
+        "🍕 *Пицца:*\n"
+        "• Маргарита - 550₽\n\n"
+        "🍣 *Суши:*\n"
+        "• Филадельфия - 700₽\n\n"
+        "Отправьте /start для заказа"
     )
+    update.message.reply_text(menu_text, parse_mode='Markdown')
 
-async def test_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик /test"""
-    await update.message.reply_text("✅ Тест пройден! Бот отвечает.")
-
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Ответ на любое сообщение"""
-    await update.message.reply_text(f"Вы сказали: {update.message.text}")
+def echo(update: Update, context: CallbackContext):
+    """Ответ на сообщения"""
+    update.message.reply_text(f"Вы написали: {update.message.text}")
 
 def main():
     """Запуск бота"""
+    if not BOT_TOKEN or "ваш_токен" in BOT_TOKEN:
+        logger.error("❌ Нет токена бота!")
+        return
+    
     try:
-        # Создаем приложение
-        app = Application.builder().token(BOT_TOKEN).build()
+        # Создаем updater
+        updater = Updater(token=BOT_TOKEN, use_context=True)
+        dispatcher = updater.dispatcher
         
         # Добавляем обработчики
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(CommandHandler("help", help_command))
-        app.add_handler(CommandHandler("test", test_command))
-        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+        dispatcher.add_handler(CommandHandler("start", start))
+        dispatcher.add_handler(CommandHandler("help", help_command))
+        dispatcher.add_handler(CommandHandler("menu", menu_command))
+        dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
         
-        # Запускаем
-        logger.info("✅ Бот запущен и готов к работе!")
+        # Запускаем бота
+        logger.info("✅ Бот запущен!")
         print("✅ Бот запущен! Отправь /start в Telegram")
         
-        app.run_polling()
+        updater.start_polling()
+        updater.idle()
         
     except Exception as e:
-        logger.error(f"❌ Ошибка запуска: {e}")
-        print(f"❌ КРИТИЧЕСКАЯ ОШИБКА: {e}")
+        logger.error(f"❌ Ошибка: {e}")
+        print(f"❌ ОШИБКА: {e}")
 
 if __name__ == "__main__":
     main()
