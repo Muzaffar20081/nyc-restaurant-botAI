@@ -1,8 +1,10 @@
-# Токен бота (получи у @BotFather)
-BOT_TOKEN = "8422033699:AAEoLcJq-LrKD6Su9Vtg4sNDf0v7IL5XRus"
+import os
 
-# Твой Telegram ID (найди через @userinfobot)
-ADMIN_ID = 6056106251  # ЗАМЕНИ на свой ID!
+# Пытаемся получить токен из переменных окружения Railway
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8422033699:AAEoLcJq-LrKD6Su9Vtg4sNDf0v7IL5XRus")
+
+# Твой Telegram ID
+ADMIN_ID = 6056106251
 
 # Меню ресторана
 MENU = {
