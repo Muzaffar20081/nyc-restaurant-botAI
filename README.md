@@ -1,10 +1,9 @@
-# 🍔 Food Delivery Bot
+# NYC Restaurant AI Bot
 
-Telegram бот для заказа еды.
+Телеграм бот для заказа еды с AI-рекомендациями.
 
-## 📦 Установка
+## Установка
+
+1. Установите зависимости:
 ```bash
-git clone https://github.com/Muzaffar20081/food-delivery-bot.git
-cd food-delivery-bot
 pip install -r requirements.txt
-python bot.py
