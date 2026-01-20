@@ -1,36 +1,57 @@
-# bot.py - ПРОСТОЙ БОТ
 import os
 import asyncio
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import CommandStart
+import logging
+import sys
 
-# Получаем токен из Railway
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout  # Важно для Railway логов!
+)
+
+logger = logging.getLogger(__name__)
+
+# Получаем токен
 TOKEN = os.getenv("BOT_TOKEN")
 
 if not TOKEN:
-    print("❌ Ошибка: BOT_TOKEN не найден в переменных окружения!")
-    print("✅ Добавьте BOT_TOKEN в Railway Variables")
-    exit(1)
+    logger.error("❌ BOT_TOKEN не найден!")
+    logger.info("Добавьте BOT_TOKEN в Railway Variables")
+    sys.exit(1)
 
-print(f"✅ Бот запускается с токеном: {TOKEN[:10]}...")
+logger.info(f"✅ Токен получен: {TOKEN[:10]}...")
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
-
-# Простая команда /start
-@dp.message(CommandStart())
-async def start(message: types.Message):
-    await message.answer(f"👋 Привет, {message.from_user.first_name}!\nЯ работаю на Railway! 🚀")
-
-# Обработка всех сообщений
-@dp.message()
-async def echo(message: types.Message):
-    await message.answer(f"Вы сказали: {message.text}")
-
-# Запуск
 async def main():
-    print("🚀 Бот запущен на Railway!")
-    await dp.start_polling(bot)
+    """Основная функция запуска бота"""
+    from aiogram import Bot, Dispatcher, types
+    from aiogram.filters import CommandStart
+    
+    bot = Bot(token=TOKEN)
+    dp = Dispatcher()
+    
+    @dp.message(CommandStart())
+    async def start_cmd(message: types.Message):
+        await message.answer(f"👋 Привет, {message.from_user.first_name}!\nБот работает на Railway! 🚀")
+    
+    @dp.message()
+    async def echo(message: types.Message):
+        await message.answer(f"Вы написали: {message.text}")
+    
+    logger.info("🚀 Бот запускается...")
+    
+    try:
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.error(f"❌ Ошибка: {e}")
+    finally:
+        await bot.session.close()
+        logger.info("Бот остановлен")
 
 if __name__ == "__main__":
+    # Этот блок ВАЖЕН для Railway
+    logger.info("=" * 50)
+    logger.info("NYC Restaurant AI Bot запускается")
+    logger.info("=" * 50)
+    
     asyncio.run(main())
